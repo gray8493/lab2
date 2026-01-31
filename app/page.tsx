@@ -1,132 +1,304 @@
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardHeader,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Eye, Cloud } from "lucide-react"
-import Link from "next/link"
+"use client";
 
-export default function LoginPage() {
+import { useState } from "react";
+import Link from "next/link";
+import {
+  ShoppingBag,
+  Search,
+  ChevronDown,
+  ShoppingCart,
+  ChevronLeft,
+  ChevronRight,
+  Globe,
+  Share2
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+// Mock Data
+const products = [
+  {
+    id: 1,
+    title: "Premium Wireless Headphones",
+    desc: "High-fidelity audio with noise cancellation",
+    price: "$299.00",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_fwGFCWE3kA52dyCtjo423KFA13fdpERg2I-iw60q5MFTi_aI1Ecp6NrN1wXM6Pc8UvR0rz0fgcLoAGVT8YVR9lJ80Y9tP1nVi3Z15E8C1PoCVmeGbdlO-kbGgKryrpdR_s8ihUQ6A_iBpZ_crCWEYR10e8-DHDhTnezJ9CT1i4dFrgNxBCLo0u8PTVk3qINyO1wulxUf34lC1MAEUvhxfQ0P_up4W4zY6HHIU-P19lz9trUjAzql5kIAWT2VnmdJKWCSIs8zrTI",
+    tag: "New",
+    sale: false
+  },
+  {
+    id: 2,
+    title: "Minimalist Leather Watch",
+    desc: "Genuine leather strap with Swiss movement",
+    price: "$150.00",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAzd5oMGECbTUJorgdYcgU9VaHAvCNI9LF9j20Mk8EPYuDV9YfZFtGQeztxsk0UT1S5b-RNjjkzbaTqAmCZRyrgeKuL4WPeq5dDhWZwzfiNkmGz3E-ftvecbkOa7_LarUnWV8IBMnJ2zjaPv7QgY2cMcZHd3_LCFxx0SHGUfOOKwCCN-z_TPuNZakemZs5tsM8bpS7vnPDzxF-LDeiHO3BBc1vjYLvVw2DyCdi_H7nTWpW0RhV-2vy5L1T9XIssbr0K3x5iS6qO7GU",
+    tag: null,
+    sale: false
+  },
+  {
+    id: 3,
+    title: "Ergonomic Office Chair",
+    desc: "Adjustable lumbar support and mesh back",
+    price: "$450.00",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDLLnSfiZ-vKcKc2lljX_CRUuHLP-tbiXl067n0yBVdayiUD7DE6W0ctxJdawUJO7LrYT7mbyTj3WF_PK_q9DHtIFqEEmXCH6Y3xhEO0ve7VnrCSYtMQjTs4M0T458BR7niqAHZsgkib0JkdWILbmHccdt9kbLJb0pWCTzUC1Da_n0WFQu6Y_zss5TUzVtILIRs6IAeGUgoXjLo50iQh3McL_5RvQ_9pRByjCF0EUzPUGqz4JymxhddRZFPsbLRifna6Isv7WlUcyY",
+    tag: null,
+    sale: false
+  },
+  {
+    id: 4,
+    title: "Mechanical Keyboard",
+    desc: "Tactile switches with customizable RGB",
+    price: "$129.00",
+    oldPrice: "$159.00",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuB7OlWxYcQ8aZFeJmBaDeX15Wgvf_6I30qYZpuJSeTesfSWoqM2IwKw9Qttyxgwu1IXpNPcEDW8tdWsn1GCkKcHIT-cXe-ttz-xMkUk6N1cpOc14zTuLZY4eFOod_SMh4HcWD1QJK-5yBxFR_dSITaXOHKBjvM1h53uELV3HZOg9rdnq-x87giw7P_LkihuZgsjFS3YcGsanP_VbqT4cum9XNuSZ9q3KEE2Gn0ueu65KFh8Ct7gZnZup4YF598OGtQc3C7E303zwLs",
+    tag: "Sale",
+    sale: true,
+    tagColor: "bg-orange-500"
+  },
+  {
+    id: 5,
+    title: "Eco-Friendly Water Bottle",
+    desc: "Sustainable stainless steel design",
+    price: "$35.00",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCQTaOyNS1YImqxiFSlTXCvmZWHpgwxq8zFoz138DXl9Jf65SkKkjGcwh6WNsYU2QZa9gOH78g5iG-sDoIiUl6QrIiZhqamRlyernmOsjjcV13ZQ4TQK8tXfLYiu7RgnH5wOuTjo8OgYNrlrI422aCiXcwxemGuL168tZ_op_f66N-5RkxXYpbuOFVpNsQuOlfdKAkZnQJP8eCjsTUWGzVLQx9ZxbekFf0Wve_n38ZMpPVcWSRCOQc_lu1bY8K12WOVyslfPOLM8MI",
+    tag: null,
+    sale: false
+  },
+  {
+    id: 6,
+    title: "Smart Fitness Tracker",
+    desc: "Heart rate and sleep monitoring",
+    price: "$89.00",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZ3Zr1HO5lwz5t77DkIoIPzk5AvOV1Tduu89k_QeSqCf1TvR5rQ37gXpyldhbqWmP2-qw99XYzgyCc26hxzGWGlGhoJSt1FLyoDi6mIsOtrMkBVx9dgCZkoTYoU2Ozpa_uJ2xat3jrCdN8jgibwTy64Wi1FLcH1VIf5x74e5MimD8LahFWG-y_jJK1LxEXrZvSz1sGmofryyoW5OffyW9YR1eExWImGtXbATSO0tD4NHh5hSHFfj4QWWqd7pRohP9KcK6kBLNtzxY",
+    tag: null,
+    sale: false
+  },
+  {
+    id: 7,
+    title: "Leather Travel Bag",
+    desc: "Durable handcrafted calfskin leather",
+    price: "$210.00",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAa4E8kzh_bHa7GWyMTrdaB86CD_zXyW6c1FzlIUkDudqj9CU1B6DW_igYvccmIXkfFcMTomki0xGkC1Lud3sF-_w3kSGSdRPa10dxCaYVEiPMiq-Q3ClHHVJVM8V99tLRdecp3Ag4X0gzahi2NxdFMrKvvod1QMbBFYzgG1sozE4xZOPFW9dhxlVZ0hxhh_O0QqPLm3rlZq4ex91ihF7EJoaGGygsgADm1Y3zOdcxPi8rVshfvq3EMouTYQ2-2gCAuaf7z_2LM5Ec",
+    tag: null,
+    sale: false
+  },
+  {
+    id: 8,
+    title: "Studio Microphone",
+    desc: "Professional grade condenser microphone",
+    price: "$199.00",
+    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDR56mLqCYGcPDYb6re3ods3Bw6ua8Pi0RDkHvzw8_oDHtThguV00dlWEWkB216CyxImlE3rG9lA5IGKN4RCaYSxJo_fNvYxVKARO7UD5tit39ZdZm-Y75uBrqzSadynSPXzv1Knv78trq1HMkX-T-1go8BsrCM5OdW_cqVyp-hk__LaxVrwOdEc26z6uW7jRnQR2cvNq57t7riVI-qHSUJMpXTSAiQriptojsvrCu9UP5ocJiBj_NKZA62AMNr41Xk0DLXLrAYfcQ",
+    tag: null,
+    sale: false
+  }
+];
+
+export default function Home() {
+  const handleAddToCart = (productName: string) => {
+    toast.success(`${productName} added to cart`, {
+      description: "You can view it in your shopping bag.",
+      action: {
+        label: "Undo",
+        onClick: () => console.log("Undo"),
+      },
+    });
+  };
+
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[#f0f7ff]">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 w-full">
-        <div className="flex items-center gap-2 font-bold text-xl">
-          <div className="bg-blue-600 p-1.5 rounded-lg">
-            <Cloud className="text-white size-5 fill-white" />
+    <div className="bg-[#f6f7f8] dark:bg-[#101922] text-[#111418] dark:text-gray-100 min-h-screen font-sans">
+      {/* Sticky Navigation Header */}
+      <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-[#101922]/80 backdrop-blur-md border-b border-[#f0f2f4] dark:border-gray-800">
+        <div className="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between gap-8">
+          {/* Logo Section */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+              <ShoppingBag className="size-5" />
+            </div>
+            <h2 className="text-xl font-extrabold tracking-tight text-[#111418] dark:text-white">
+              ShopLogo
+            </h2>
           </div>
-          <span className="text-[#1a1c1e]">Acme Cloud</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500 hidden sm:inline">Don't have an account?</span>
-          <Button variant="outline" className="bg-[#e8f1ff] border-none text-blue-600 hover:bg-blue-100 font-semibold px-5">
-            Sign Up
-          </Button>
+
+          {/* Search Bar Section */}
+          <div className="flex-1 max-w-xl hidden md:block">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#617589]">
+                <Search className="size-5" />
+              </div>
+              <Input
+                type="text"
+                className="block w-full h-10 pl-10 pr-3 py-2 border-none bg-[#f0f2f4] dark:bg-gray-800 rounded-lg text-sm placeholder-[#617589] focus-visible:ring-2 focus-visible:ring-primary focus:bg-white dark:focus:bg-gray-700 transition-all shadow-none"
+                placeholder="Search products, brands, and more..."
+              />
+            </div>
+          </div>
+
+          {/* Actions Section */}
+          <div className="flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-6">
+              <Link className="text-sm font-medium hover:text-primary transition-colors" href="#">Electronics</Link>
+              <Link className="text-sm font-medium hover:text-primary transition-colors" href="#">Home</Link>
+              <Link className="text-sm font-medium hover:text-primary transition-colors" href="#">Fashion</Link>
+            </nav>
+            <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block"></div>
+            <div className="flex items-center gap-2">
+              <Link href="/login">
+                <Button variant="ghost" className="h-10 px-4 text-sm font-semibold text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-gray-800 rounded-lg transition-colors">
+                  Login
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button className="h-10 px-5 bg-primary text-white text-sm font-bold rounded-lg shadow-sm hover:bg-primary/90 hover:shadow-md transition-all">
+                  Register
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-[440px] shadow-sm border-none rounded-2xl p-4">
-          <CardHeader className="space-y-2 pb-8 pt-6">
-            <h1 className="text-3xl font-bold text-center text-[#1a1c1e]">Welcome back</h1>
-            <CardDescription className="text-center text-gray-500 text-base">
-              Enter your details to access your dashboard.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6">
-            <div className="grid gap-2 text-left">
-              <Label htmlFor="email" className="font-semibold text-sm">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@company.com"
-                className="h-12 border-gray-200 focus-visible:ring-blue-500"
-                required
-              />
+      <main className="max-w-[1280px] mx-auto px-6 py-10">
+        {/* Page Heading Component */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-4xl font-black text-[#111418] dark:text-white tracking-tight">
+                Trending Products
+              </h1>
+              <p className="text-[#617589] dark:text-gray-400 text-lg">
+                Curated collection of our best-selling items this week.
+              </p>
             </div>
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" title="Password" className="font-semibold text-sm">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs font-semibold text-blue-600 p-0 h-auto"
+            {/* Filter Chips */}
+            <div className="flex flex-wrap gap-2">
+              <Button className="h-9 gap-2 rounded-lg bg-primary text-white px-4 text-sm font-medium">
+                All Products
+                <ChevronDown className="size-[18px]" />
+              </Button>
+              <Button variant="outline" className="h-9 gap-2 rounded-lg bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 px-4 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
+                New Arrivals
+                <ChevronDown className="size-[18px]" />
+              </Button>
+              <Button variant="outline" className="h-9 gap-2 rounded-lg bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 px-4 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
+                Best Sellers
+                <ChevronDown className="size-[18px]" />
+              </Button>
+              <Button variant="outline" className="h-9 gap-2 rounded-lg bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 px-4 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
+                Price
+                <ChevronDown className="size-[18px]" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Product Grid Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
+          {products.map((product) => (
+            <div key={product.id} className="group flex flex-col gap-4 cursor-pointer">
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+                {/* Image Placeholder */}
+                <div
+                  className="w-full h-full bg-center bg-no-repeat bg-cover transition-transform duration-500 group-hover:scale-105"
+                  style={{ backgroundImage: `url("${product.image}")` }}
+                ></div>
+
+                {product.tag && (
+                  <div className={`absolute top-3 left-3 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-white ${product.tagColor ? product.tagColor : 'bg-primary text-white'}`}>
+                    {product.tag}
+                  </div>
+                )}
+
+                {/* Add to Cart Button */}
+                <Button
+                  size="icon"
+                  className="absolute bottom-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 size-10 bg-white dark:bg-slate-700 rounded-full flex items-center justify-center shadow-lg text-primary hover:bg-primary hover:text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(product.title);
+                  }}
                 >
-                  Forgot password?
-                </Link>
+                  <ShoppingCart className="size-5" />
+                </Button>
               </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type="password"
-                  className="h-12 border-gray-200 focus-visible:ring-blue-500 pr-10"
-                  required
-                />
-                <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Eye className="size-5" />
-                </button>
-              </div>
-            </div>
-
-            <Button className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base rounded-lg transition-colors mt-2">
-              Sign In
-            </Button>
-
-            <div className="relative my-2">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-3 text-gray-400 font-medium">
-                  Or continue with
-                </span>
+              <div className="flex flex-col gap-1">
+                <h3 className="text-[#111418] dark:text-white text-base font-bold leading-tight group-hover:text-primary transition-colors">
+                  {product.title}
+                </h3>
+                <p className="text-[#617589] dark:text-gray-400 text-sm font-normal line-clamp-1">
+                  {product.desc}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-[#111418] dark:text-white text-lg font-extrabold">{product.price}</p>
+                  {product.oldPrice && <p className="text-xs text-gray-400 line-through">{product.oldPrice}</p>}
+                </div>
               </div>
             </div>
+          ))}
+        </div>
 
-            <Button variant="outline" className="w-full h-12 border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-3 font-semibold text-gray-700">
-              <svg className="size-5" viewBox="0 0 24 24">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-              Sign in with Google
-            </Button>
-
-            <p className="text-center text-xs text-gray-500 leading-relaxed px-4">
-              By clicking continue, you agree to our{" "}
-              <Link href="/terms" className="underline hover:text-gray-800">Terms of Service</Link> và{" "}
-              <Link href="/privacy" className="underline hover:text-gray-800">Privacy Policy</Link>.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Pagination Component */}
+        <div className="mt-16 flex items-center justify-center gap-2">
+          <Button variant="ghost" size="icon" className="size-10 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800">
+            <ChevronLeft className="size-5" />
+          </Button>
+          <Button className="size-10 bg-primary text-white rounded-lg shadow-sm font-bold text-sm">1</Button>
+          <Button variant="ghost" className="size-10 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800">2</Button>
+          <Button variant="ghost" className="size-10 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800">3</Button>
+          <div className="text-sm font-medium flex size-10 items-center justify-center text-gray-400">...</div>
+          <Button variant="ghost" className="size-10 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800">12</Button>
+          <Button variant="ghost" size="icon" className="size-10 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800">
+            <ChevronRight className="size-5" />
+          </Button>
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full px-6 py-6 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between text-xs text-gray-400 gap-4">
-        <div>© 2023 Acme Cloud Inc. All rights reserved.</div>
-        <div className="flex items-center gap-6">
-          <Link href="/support" className="hover:text-gray-600 transition-colors">Support</Link>
-          <Link href="/status" className="hover:text-gray-600 transition-colors">Status</Link>
-          <Link href="/security" className="hover:text-gray-600 transition-colors">Security</Link>
+      {/* Simple Footer */}
+      <footer className="border-t border-[#f0f2f4] dark:border-gray-800 py-12 bg-white dark:bg-[#101922] mt-20">
+        <div className="max-w-[1280px] mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <div className="size-6 bg-primary rounded flex items-center justify-center text-white">
+                <ShoppingBag className="size-3" />
+              </div>
+              <h2 className="text-lg font-extrabold tracking-tight">ShopLogo</h2>
+            </div>
+            <p className="text-sm text-[#617589] dark:text-gray-400">
+              Your one-stop destination for premium tech and lifestyle products.
+            </p>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h4 className="font-bold text-sm uppercase tracking-wider">Company</h4>
+            <nav className="flex flex-col gap-2">
+              <Link className="text-sm text-[#617589] hover:text-primary" href="#">About Us</Link>
+              <Link className="text-sm text-[#617589] hover:text-primary" href="#">Careers</Link>
+              <Link className="text-sm text-[#617589] hover:text-primary" href="#">Sustainability</Link>
+            </nav>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h4 className="font-bold text-sm uppercase tracking-wider">Help</h4>
+            <nav className="flex flex-col gap-2">
+              <Link className="text-sm text-[#617589] hover:text-primary" href="#">Shipping Info</Link>
+              <Link className="text-sm text-[#617589] hover:text-primary" href="#">Returns</Link>
+              <Link className="text-sm text-[#617589] hover:text-primary" href="#">Track Order</Link>
+            </nav>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h4 className="font-bold text-sm uppercase tracking-wider">Newsletter</h4>
+            <div className="flex gap-2">
+              <Input className="flex-1 bg-[#f0f2f4] dark:bg-gray-800 border-none rounded-lg text-sm h-10 px-3 shadow-none" placeholder="Email address" type="email" />
+              <Button className="bg-primary text-white font-bold h-10 px-4 rounded-lg text-sm">Join</Button>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-[1280px] mx-auto px-6 pt-12 mt-12 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center">
+          <p className="text-xs text-[#617589]">© 2026 ShopLogo Inc. All rights reserved.</p>
+          <div className="flex gap-4">
+            <Globe className="size-5 text-gray-400 cursor-pointer hover:text-primary" />
+            <Share2 className="size-5 text-gray-400 cursor-pointer hover:text-primary" />
+          </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }
