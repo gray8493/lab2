@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "@/lib/cart-context";
+import { AuthProvider } from "@/lib/auth-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Shop Website",
-  description: "Modern E-commerce Shop built with Next.js and ShadCN UI",
+  title: "LuxeShop - Premium Lifestyle Store",
+  description: "Modern E-commerce Shop with Auth & Order History. Built with Next.js, Supabase, and ShadCN UI",
 };
 
 export default function RootLayout({
@@ -29,10 +30,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <CartProvider>
-          {children}
-          <Toaster />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            {children}
+            <Toaster />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -2,22 +2,73 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, CreditCard, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ShoppingBag, CreditCard, ChevronRight, Loader2 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/lib/supabase";
 import { Navbar } from "@/components/shop/Navbar";
 import { CartItem } from "@/components/shop/CartItem";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export default function CartPage() {
     const { cart, totalPrice, totalItems, clearCart } = useCart();
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
     const [mounted, setMounted] = useState(false);
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
     if (!mounted) return null;
+
+    const handleCheckout = async () => {
+        // Nếu chưa đăng nhập, redirect sang login và quay lại cart
+        if (!user) {
+            toast.info("Vui lòng đăng nhập để tiếp tục thanh toán");
+            router.push("/login?redirect=/cart");
+            return;
+        }
+
+        if (cart.length === 0) {
+            toast.error("Giỏ hàng trống!");
+            return;
+        }
+
+        setCheckoutLoading(true);
+        try {
+            // Tạo order trong Supabase
+            const orderItems = cart.map((item) => ({
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+            }));
+
+            const { error } = await supabase.from("orders").insert({
+                user_id: user.id,
+                total_price: totalPrice,
+                items: orderItems,
+                status: "pending",
+            });
+
+            if (error) throw error;
+
+            // Xóa cart sau khi đặt hàng thành công
+            clearCart();
+            toast.success("🎉 Order placed successfully! Check your order history.");
+            router.push("/orders");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Failed to place order.";
+            toast.error(`Checkout failed: ${message}`);
+        } finally {
+            setCheckoutLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
@@ -40,7 +91,7 @@ export default function CartPage() {
                             <ShoppingBag className="w-10 h-10 text-zinc-400" />
                         </div>
                         <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">Cart is empty</h2>
-                        <p className="text-zinc-500 dark:text-zinc-400 mb-8">Looks like you haven't added anything to your cart yet.</p>
+                        <p className="text-zinc-500 dark:text-zinc-400 mb-8">Looks like you haven&apos;t added anything to your cart yet.</p>
                         <Link href="/">
                             <Button className="bg-teal-600 hover:bg-teal-700">
                                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -107,14 +158,32 @@ export default function CartPage() {
                                         </div>
                                     </div>
 
-                                    <Button className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-lg font-bold shadow-lg shadow-teal-500/20 transition-all active:scale-[0.98]">
-                                        <CreditCard className="w-5 h-5 mr-2" />
-                                        Checkout Now
+                                    {/* Auth indicator */}
+                                    {!authLoading && !user && (
+                                        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-700 dark:text-amber-400">
+                                            ⚠️ Please{" "}
+                                            <Link href="/login?redirect=/cart" className="font-semibold underline">
+                                                login
+                                            </Link>{" "}
+                                            to proceed to checkout.
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        onClick={handleCheckout}
+                                        disabled={checkoutLoading || authLoading}
+                                        className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-lg font-bold shadow-lg shadow-teal-500/20 transition-all active:scale-[0.98]"
+                                    >
+                                        {checkoutLoading ? (
+                                            <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Processing...</>
+                                        ) : (
+                                            <><CreditCard className="w-5 h-5 mr-2" /> Checkout Now</>
+                                        )}
                                     </Button>
 
                                     <div className="mt-6 flex flex-col items-center justify-center space-y-2">
                                         <p className="text-xs text-zinc-400 text-center italic">
-                                            Secure payment processing by Stripe. <br />
+                                            Secure checkout powered by Supabase. <br />
                                             Free shipping on all orders this month.
                                         </p>
                                     </div>
