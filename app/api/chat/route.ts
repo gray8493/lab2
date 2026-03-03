@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+export const dynamic = "force-dynamic";
 
 interface ChatMessage {
     role: "user" | "model";
@@ -10,14 +10,16 @@ interface ChatMessage {
 
 export async function POST(req: NextRequest) {
     try {
-        const { messages }: { messages: ChatMessage[] } = await req.json();
-
         if (!process.env.GEMINI_API_KEY) {
             return NextResponse.json(
                 { error: "GEMINI_API_KEY is not configured" },
                 { status: 500 }
             );
         }
+
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+        const { messages }: { messages: ChatMessage[] } = await req.json();
 
         // Build conversation history for Gemini
         const contents = messages.map((msg) => ({
